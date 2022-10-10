@@ -1,0 +1,15 @@
+<?xml version='1.0' encoding='utf-8'?>
+<plugin id="com.omnus.plugins.swiftrecorded" version="0.0.1" xmlns="http://apache.org/cordova/ns/plugins/1.0" xmlns:android="http://schemas.android.com/apk/res/android">
+    <name>SwiftRecorded</name>
+    <js-module name="SwiftRecorded" src="www/SwiftRecorded.js">
+        <clobbers target="cordova.plugins.SwiftRecorded" />
+    </js-module>
+    <platform name="ios">
+        <config-file target="config.xml" parent="/*">
+        <feature name="SwiftRecorded">
+            <param name="ios-package" value="SwiftRecorded" />
+        </feature>
+        </config-file>
+        <source-file src="src/ios/CordovaRecorded.swift" />
+    </platform>    
+</plugin>
