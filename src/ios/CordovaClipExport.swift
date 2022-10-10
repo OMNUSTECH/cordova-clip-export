@@ -39,6 +39,7 @@ class CordovaClipExport : CDVPlugin, NSObject,  RPScreenRecorderDelegate, RPPrev
             print("Attempting To start recording while recording is in progress")
             return
         }
+        
         if #available(iOS 15.0, *) {
             recorder.startClipBuffering { err in
                 if err != nil {
