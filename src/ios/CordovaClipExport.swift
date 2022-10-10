@@ -16,6 +16,19 @@ class CordovaClipExport : CDVPlugin, NSObject,  RPScreenRecorderDelegate, RPPrev
     var fileName: String = ""
     var videoRecorded: NSData? = nil
     
+    @objc(isAvailable:)
+       func isAvailable(_ command: CDVInvokedUrlCommand) {
+           let recorder = RPScreenRecorder.shared()
+           if #available(iOS 15.0, *) {
+               let available = recorder.isAvailable;
+               let pluginResult = CDVPluginResult(status:CDVCommandStatus_OK, messageAs: available)
+               self.commandDelegate!.send(pluginResult, callbackId:command.callbackId)
+           } else {
+               let pluginResult = CDVPluginResult(status:CDVCommandStatus_OK, messageAs: false)
+               self.commandDelegate!.send(pluginResult, callbackId:command.callbackId)
+           }
+    }
+    
     
     @objc func startScreenRecording(command: CDVInvokedUrlCommand) {
 
@@ -23,6 +36,9 @@ class CordovaClipExport : CDVPlugin, NSObject,  RPScreenRecorderDelegate, RPPrev
         status: CDVCommandStatus_ERROR
         )
 
+        
+        
+        
         if isRecording() {
 
             pluginResult = CDVPluginResult(
@@ -122,6 +138,16 @@ class CordovaClipExport : CDVPlugin, NSObject,  RPScreenRecorderDelegate, RPPrev
             }
         }
     }
+    
+    
+    @objc(isRecording:)
+        func isRecording(_ command: CDVInvokedUrlCommand) {
+            let recorder = RPScreenRecorder.shared()
+            let recording = recorder.isRecording;
+            let pluginResult = CDVPluginResult(status:CDVCommandStatus_OK, messageAs: recording)
+            self.commandDelegate!.send(pluginResult, callbackId:command.callbackId)
+        }
+    
     
     // Provide the URL to which the clip needs to be extracted to
     // Would be preferred to add it to the NSTemporaryDirectory
