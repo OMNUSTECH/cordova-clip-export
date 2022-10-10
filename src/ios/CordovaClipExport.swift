@@ -17,7 +17,7 @@ class CordovaClipExport : CDVPlugin, NSObject,  RPScreenRecorderDelegate, RPPrev
     var videoRecorded: NSData? = nil
     
     @objc(isAvailable:)
-       func isAvailable(_ command: CDVInvokedUrlCommand) {
+       func isAvailable(command: CDVInvokedUrlCommand) {
            let recorder = RPScreenRecorder.shared()
            if #available(iOS 15.0, *) {
                let available = recorder.isAvailable;
