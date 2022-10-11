@@ -5,13 +5,16 @@
         <keywords>cordova,replaykit,screen recording</keywords>
         <license>MIT</license>
         <repo>https://github.com/OMNUSTECH/cordova-clip-export.git</repo>
+        
         <engines>
-              <engine name="cordova-ios" version=">=0.0.1" />
+              <engine name="cordova" version=">=1.7.0" />
+              <engine name="cordova-ios" version=">=1.7.1" />
         </engines>
         
     <js-module name="CordovaClipExport" src="www/CordovaClipExport.js">
         <clobbers target="cordova.plugins.CordovaClipExport" />
     </js-module>
+
     <platform name="ios">
         <hook type="after_plugin_add" src="hooks/setswiftversion.js" />
         <config-file target="config.xml" parent="/*">
@@ -19,6 +22,7 @@
             <param name="ios-package" value="CordovaClipExport" />
         </feature>
         </config-file>
+        <header-file src="src/ios/cordova-clip-export-Bridging-Header.h"/>
         <source-file src="src/ios/CordovaClipExport.swift" />
         <framework src="ReplayKit.framework" />
         <framework src="UIKit.framework" />
