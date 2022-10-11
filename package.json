@@ -1,0 +1,20 @@
+{
+  "name": "cordova-clip-export",
+  "version": "0.0.1",
+  "description": "Allows to use the iOS's Clip and Export Screen Record",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/OMNUSTECH/cordova-clip-export.git"
+  },
+  "keywords": [
+    "ecosystem:cordova",
+    "cordova-ios",
+    "screen recording"
+  ],
+  "author": "Omnus <developer@omnus.com.br> (https://github.com/OMNUSTECH)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/OMNUSTECH/cordova-clip-export/issues"
+  },
+  "homepage": "https://github.com/OMNUSTECH/cordova-clip-export#readme"
+}
