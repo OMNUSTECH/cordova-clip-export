@@ -6,7 +6,7 @@
         <license>MIT</license>
         <repo>https://github.com/OMNUSTECH/cordova-clip-export.git</repo>
         <engines>
-              <engine name="cordova-ios" version=">=3.8.0" />
+              <engine name="cordova-ios" version=">=0.0.1" />
         </engines>
         
     <js-module name="CordovaClipExport" src="www/CordovaClipExport.js">
