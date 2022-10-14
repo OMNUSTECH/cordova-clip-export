@@ -59,17 +59,17 @@ class CordovaClipExport : CDVPlugin,  RPScreenRecorderDelegate, RPPreviewViewCon
 
             pluginResult = CDVPluginResult(
                 status: CDVCommandStatus_OK,
-                messageAsString: "Attempting To start recording while recording is in progress"
+                messageAs: "Attempting To start recording while recording is in progress"
             )
 
-            self.commandDelegate!.sendPluginResult(
+            self.commandDelegate!.send(
             pluginResult,
             callbackId: command.callbackId
             )            
 
 
             print("Attempting To start recording while recording is in progress")
-            return
+            //return
         }
         
         if #available(iOS 15.0, *) {
@@ -78,10 +78,10 @@ class CordovaClipExport : CDVPlugin,  RPScreenRecorderDelegate, RPPreviewViewCon
 
                     pluginResult = CDVPluginResult(
                         status: CDVCommandStatus_ERROR,
-                        messageAsString: "Attempting To start recording while recording is in progress"
+                        messageAs: "Attempting To start recording while recording is in progress"
                     )
 
-                    self.commandDelegate!.sendPluginResult(
+                    self.commandDelegate!.send(
                     pluginResult,
                     callbackId: command.callbackId)   
 
@@ -91,10 +91,10 @@ class CordovaClipExport : CDVPlugin,  RPScreenRecorderDelegate, RPPreviewViewCon
 
                 pluginResult = CDVPluginResult(
                     status: CDVCommandStatus_OK,
-                    messageAsString: "Rolling Clip started successfully"
+                    messageAs: "Rolling Clip started successfully"
                 )
 
-                self.commandDelegate!.sendPluginResult(
+                self.commandDelegate!.send(
                 pluginResult,
                 callbackId: command.callbackId
                 )     
@@ -108,30 +108,30 @@ class CordovaClipExport : CDVPlugin,  RPScreenRecorderDelegate, RPPreviewViewCon
     @objc  func stopScreenRecording(command: CDVInvokedUrlCommand) {
         if !isRecording() {
             
-            pluginResult = CDVPluginResult(
+            var pluginResult = CDVPluginResult(
                 status: CDVCommandStatus_OK,
-                messageAsString: "Attempting the stop recording without an on going recording session"
+                messageAs: "Attempting the stop recording without an on going recording session"
             )
 
-            self.commandDelegate!.sendPluginResult(
+            self.commandDelegate!.send(
             pluginResult,
             callbackId: command.callbackId
             )
 
             
             print("Attempting the stop recording without an on going recording session")
-            return
+            //return
         }
         if #available(iOS 15.0, *) {
             recorder.stopClipBuffering { [self] err in
                 if err != nil {
                     
-                    pluginResult = CDVPluginResult(
+                    var pluginResult = CDVPluginResult(
                         status: CDVCommandStatus_ERROR,
-                        messageAsString: "Failed to stop screen recording"
+                        messageAs: "Failed to stop screen recording"
                     )
 
-                    self.commandDelegate!.sendPluginResult(
+                    self.commandDelegate!.send(
                     pluginResult,
                     callbackId: command.callbackId)
                     
@@ -139,12 +139,12 @@ class CordovaClipExport : CDVPlugin,  RPScreenRecorderDelegate, RPPreviewViewCon
                     // Would be ideal to let user know about this with an alert
                 }
                 
-                pluginResult = CDVPluginResult(
+                var pluginResult = CDVPluginResult(
                     status: CDVCommandStatus_OK,
-                    messageAsString: "Rolling Clip stopped successfully"
+                    messageAs: "Rolling Clip stopped successfully"
                 )
 
-                self.commandDelegate!.sendPluginResult(
+                self.commandDelegate!.send(
                 pluginResult,
                 callbackId: command.callbackId
                 )
@@ -170,18 +170,18 @@ class CordovaClipExport : CDVPlugin,  RPScreenRecorderDelegate, RPPreviewViewCon
     @objc  func exportClip(command: CDVInvokedUrlCommand) {
         if !isRecording() {
             
-            pluginResult = CDVPluginResult(
+            var pluginResult = CDVPluginResult(
                 status: CDVCommandStatus_OK,
-                messageAsString: "Attemping to export clip while rolling clip buffer is turned off"
+                messageAs: "Attemping to export clip while rolling clip buffer is turned off"
             )
 
-            self.commandDelegate!.sendPluginResult(
+            self.commandDelegate!.send(
             pluginResult,
             callbackId: command.callbackId
             )
             
             print("Attemping to export clip while rolling clip buffer is turned off")
-            return videoRecorded!
+            //return videoRecorded!
         }
         // internal for which the clip is to be extracted
         // Max Value: 15 sec
@@ -194,28 +194,31 @@ class CordovaClipExport : CDVPlugin,  RPScreenRecorderDelegate, RPPreviewViewCon
             recorder.exportClip(to: clipURL, duration: interval) {[weak self]error in
                 if error != nil {
                     
-                    pluginResult = CDVPluginResult(
+                    /*
+                    var pluginResult = CDVPluginResult(
                         status: CDVCommandStatus_OK,
-                        messageAsString: "Error attempting export clip"
+                        messageAs: "Error attempting export clip"
                     )
 
-                    self.commandDelegate!.sendPluginResult(
+                    self.commandDelegate!.send(
                     pluginResult,
                     callbackId: command.callbackId
                     )
+                    */
                     
                     print("Error attempting export clip")
                     // would be ideal to show an alert letting user know about the failure
                 }
-                self?.saveToPhotos(tempURL: clipURL)
-                self?.videoRecorded = NSData(contentsOf: clipURL)
+                //self?.saveToPhotos(tempURL: clipURL)
+                //self?.videoRecorded = NSData(contentsOf: clipURL)
             }
         }
-
-        pluginResult = CDVPluginResult(
+        /*
+        var pluginResult = CDVPluginResult(
             status: CDVCommandStatus_OK,
             messageAsArrayBuffer: videoRecorded!
         )
+        */
         //return videoRecorded!
     }
     
