@@ -7,14 +7,30 @@
 
 import UIKit
 import ReplayKit
-import Photos
 
-@available(iOS 15.0, *)
-class CordovaClipExport : CDVPlugin, NSObject,  RPScreenRecorderDelegate, RPPreviewViewControllerDelegate
+class CordovaClipExport : CDVPlugin,  RPScreenRecorderDelegate, RPPreviewViewControllerDelegate
 {
     var recorder = RPScreenRecorder.shared()
     var fileName: String = ""
     var videoRecorded: NSData? = nil
+
+    @objc(coolMethod:)
+    func coolMethod(_ command: CDVInvokedUrlCommand) {
+        
+        let msg = command.arguments[0] as? String ?? "Error"
+        print(msg)
+        
+        var pluginResult = CDVPluginResult(status: CDVCommandStatus_ERROR,messageAs: msg)
+        
+        if msg.count > 0 {
+            pluginResult = CDVPluginResult(
+                status: CDVCommandStatus_OK,
+                messageAs: msg
+            )
+        }
+        
+        self.commandDelegate!.send(pluginResult,callbackId: command.callbackId) 
+    }
     
     @objc(isAvailable:)
        func isAvailable(command: CDVInvokedUrlCommand) {
@@ -216,41 +232,6 @@ class CordovaClipExport : CDVPlugin, NSObject,  RPScreenRecorderDelegate, RPPrev
         tempPath.appendPathComponent(String.localizedStringWithFormat("output-%@.mp4", stringDate))
         return tempPath 
     }
-
-    
-    private func saveToPhotos(tempURL: URL) {
-        PHPhotoLibrary.shared().performChanges {
-            PHAssetChangeRequest.creationRequestForAssetFromVideo(atFileURL: tempURL)
-        } completionHandler: { success, error in
-            if success == true {
-                
-                pluginResult = CDVPluginResult(
-                    status: CDVCommandStatus_OK,
-                    messageAsString: "Saved rolling clip to photos"
-                )
-
-                self.commandDelegate!.sendPluginResult(
-                pluginResult,
-                callbackId: command.callbackId
-                )
-                
-                print("Saved rolling clip to photos")
-                
-            } else {
-                
-                pluginResult = CDVPluginResult(
-                    status: CDVCommandStatus_OK,
-                    messageAsString: "Error exporting clip to Photos \(String(describing: error))"
-                )
-
-                self.commandDelegate!.sendPluginResult(
-                pluginResult,
-                callbackId: command.callbackId
-                )
-                print("Error exporting clip to Photos \(String(describing: error))")
-            }
-        }
-    }
-   
+ 
     
 }

@@ -1,12 +1,7 @@
 var exec = require('cordova/exec');
 
-/*
-exports.coolMethod = function (arg0, success, error) {
-    exec(success, error, 'SwiftRecorded', 'coolMethod', [arg0]);
-};
-*/
 
-var Replay = {
+var ClipExport = {
     isAvailable: function (success, error) {
         exec(success, error, 'CordovaClipExport', 'isAvailable');
     },
@@ -21,7 +16,10 @@ var Replay = {
     },  
     exportClip: function (success, error) {
         exec(success, error, "CordovaClipExport", "exportClip");
+    },
+    coolMethod: function (arg0, onSuccess, onError) {
+        exec(onSuccess, onError, "CordovaClipExport", "coolMethod", [arg0]);
     }
 };
 
-module.exports = Replay;
+module.exports = ClipExport;
