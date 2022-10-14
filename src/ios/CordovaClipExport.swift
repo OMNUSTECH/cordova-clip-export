@@ -35,7 +35,7 @@ class CordovaClipExport : CDVPlugin,  RPScreenRecorderDelegate, RPPreviewViewCon
     @objc(isAvailable:)
        func isAvailable(command: CDVInvokedUrlCommand) {
            let recorder = RPScreenRecorder.shared()
-           if #available(iOS 15.0, *) {
+           if #available(iOS 13.0, *) {
                let available = recorder.isAvailable;
                let pluginResult = CDVPluginResult(status:CDVCommandStatus_OK, messageAs: available)
                self.commandDelegate!.send(pluginResult, callbackId:command.callbackId)
