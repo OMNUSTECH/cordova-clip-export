@@ -2,17 +2,28 @@
 //  CordovaClipExport.swift
 //  
 //
-//  Created by PEDRO HENRIQUE FLORENCIO SOARES on 10/10/22.
+//  Created by Diógenes Dauster on 10/10/22.
 //
 
 import UIKit
 import ReplayKit
+import AVFoundation
 
-class CordovaClipExport : CDVPlugin,  RPScreenRecorderDelegate, RPPreviewViewControllerDelegate
+class CordovaClipExport : CDVPlugin
 {
-    var recorder = RPScreenRecorder.shared()
-    var fileName: String = ""
+    let recorder = RPScreenRecorder.shared()
+    
     var videoRecorded: NSData? = nil
+    var videoOutputURL : URL?
+    var videoWriter : AVAssetWriter?
+
+    var audioInput:AVAssetWriterInput!
+    var videoWriterInput : AVAssetWriterInput?
+    let nameVideo: String = "clip-record.mp4"
+    var recordAudio: Bool = false;
+    let screenSize = UIScreen.main.bounds
+
+
 
     @objc(coolMethod:)
     func coolMethod(_ command: CDVInvokedUrlCommand) {
@@ -35,7 +46,7 @@ class CordovaClipExport : CDVPlugin,  RPScreenRecorderDelegate, RPPreviewViewCon
     @objc(isAvailable:)
        func isAvailable(command: CDVInvokedUrlCommand) {
            let recorder = RPScreenRecorder.shared()
-           if #available(iOS 13.0, *) {
+           if #available(iOS 11.0, *) {
                let available = recorder.isAvailable;
                let pluginResult = CDVPluginResult(status:CDVCommandStatus_OK, messageAs: available)
                self.commandDelegate!.send(pluginResult, callbackId:command.callbackId)
@@ -44,197 +55,162 @@ class CordovaClipExport : CDVPlugin,  RPScreenRecorderDelegate, RPPreviewViewCon
                self.commandDelegate!.send(pluginResult, callbackId:command.callbackId)
            }
     }
-    
-    
-    @objc func startScreenRecording(command: CDVInvokedUrlCommand) {
-
-        var pluginResult = CDVPluginResult(
-        status: CDVCommandStatus_ERROR
-        )
-
-        
-        
-        
-        if isRecording() {
-
-            pluginResult = CDVPluginResult(
-                status: CDVCommandStatus_OK,
-                messageAs: "Attempting To start recording while recording is in progress"
-            )
-
-            self.commandDelegate!.send(
-            pluginResult,
-            callbackId: command.callbackId
-            )            
 
 
-            print("Attempting To start recording while recording is in progress")
-            //return
-        }
-        
-        if #available(iOS 15.0, *) {
-            recorder.startClipBuffering { err in
-                if err != nil {
-
-                    pluginResult = CDVPluginResult(
-                        status: CDVCommandStatus_ERROR,
-                        messageAs: "Attempting To start recording while recording is in progress"
-                    )
-
-                    self.commandDelegate!.send(
-                    pluginResult,
-                    callbackId: command.callbackId)   
-
-                    print("Error Occured trying to start rolling clip: \(String(describing: err))")
-                    //Would be ideal to let the user know about this with an alert
-                }
-
-                pluginResult = CDVPluginResult(
-                    status: CDVCommandStatus_OK,
-                    messageAs: "Rolling Clip started successfully"
-                )
-
-                self.commandDelegate!.send(
-                pluginResult,
-                callbackId: command.callbackId
-                )     
-
-
-                print("Rolling Clip started successfully")
-            }
-        }
+    @objc func isRecording(_ command: CDVInvokedUrlCommand) {
+        let recorder = RPScreenRecorder.shared()
+        let recording = recorder.isRecording;
+        let pluginResult = CDVPluginResult(status:CDVCommandStatus_OK, messageAs: recording)
+        self.commandDelegate!.send(pluginResult, callbackId:command.callbackId)
     }
-    
-    @objc  func stopScreenRecording(command: CDVInvokedUrlCommand) {
-        if !isRecording() {
-            
-            var pluginResult = CDVPluginResult(
-                status: CDVCommandStatus_OK,
-                messageAs: "Attempting the stop recording without an on going recording session"
-            )
 
-            self.commandDelegate!.send(
-            pluginResult,
-            callbackId: command.callbackId
-            )
 
-            
-            print("Attempting the stop recording without an on going recording session")
-            //return
-        }
-        if #available(iOS 15.0, *) {
-            recorder.stopClipBuffering { [self] err in
-                if err != nil {
-                    
-                    var pluginResult = CDVPluginResult(
-                        status: CDVCommandStatus_ERROR,
-                        messageAs: "Failed to stop screen recording"
-                    )
+    @objc func startCapture(_ command: CDVInvokedUrlCommand) {
 
-                    self.commandDelegate!.send(
-                    pluginResult,
-                    callbackId: command.callbackId)
-                    
-                    print("Failed to stop screen recording")
-                    // Would be ideal to let user know about this with an alert
-                }
-                
-                var pluginResult = CDVPluginResult(
-                    status: CDVCommandStatus_OK,
-                    messageAs: "Rolling Clip stopped successfully"
-                )
+        // Parâmetros de entrada
+        
+        let isMicOn: Bool = command.arguments[0] as? Bool ?? false
 
-                self.commandDelegate!.send(
-                pluginResult,
-                callbackId: command.callbackId
-                )
+        self.recordAudio = isMicOn
 
-                print("Rolling Clip stopped successfully")
-                
-            }
-        }
-    }
-    
-    
-    @objc(isRecording:)
-        func isRecording(_ command: CDVInvokedUrlCommand) {
-            let recorder = RPScreenRecorder.shared()
-            let recording = recorder.isRecording;
-            let pluginResult = CDVPluginResult(status:CDVCommandStatus_OK, messageAs: recording)
+        // Monta o caminho que onde será salvo a video da screen        
+        
+        let documentsPath = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0] as NSString
+        self.videoOutputURL = URL(fileURLWithPath: documentsPath.appendingPathComponent(self.nameVideo))
+
+        self.isRecording = true        
+        
+        // Excluir o registro se já existe
+        do {
+            try FileManager.default.removeItem(at: self.videoOutputURL!)
+        } catch {}
+
+        // Cria o objeto que irar criar o arquivo de media no formato .mp4
+
+        do {
+            try videoWriter = AVAssetWriter(outputURL: self.videoOutputURL!, fileType: AVFileType.mp4)
+        } catch let writerError as NSError {
+            print("Error opening video file", writerError);
+
+            let pluginResult = CDVPluginResult(status:CDVCommandStatus_OK, messageAs: false)
             self.commandDelegate!.send(pluginResult, callbackId:command.callbackId)
-        }
-    
-    
-    // Provide the URL to which the clip needs to be extracted to
-    // Would be preferred to add it to the NSTemporaryDirectory
-    @objc  func exportClip(command: CDVInvokedUrlCommand) {
-        if !isRecording() {
-            
-            var pluginResult = CDVPluginResult(
-                status: CDVCommandStatus_OK,
-                messageAs: "Attemping to export clip while rolling clip buffer is turned off"
-            )
 
-            self.commandDelegate!.send(
-            pluginResult,
-            callbackId: command.callbackId
-            )
-            
-            print("Attemping to export clip while rolling clip buffer is turned off")
-            //return videoRecorded!
-        }
-        // internal for which the clip is to be extracted
-        // Max Value: 15 sec
-        let interval = TimeInterval(15)
-        
-        let clipURL = getDirectory()
-        
-        print("Generating clip at URL: ", clipURL)
-        if #available(iOS 15.0, *) {
-            recorder.exportClip(to: clipURL, duration: interval) {[weak self]error in
-                if error != nil {
-                    
-                    /*
-                    var pluginResult = CDVPluginResult(
-                        status: CDVCommandStatus_OK,
-                        messageAs: "Error attempting export clip"
-                    )
 
-                    self.commandDelegate!.send(
-                    pluginResult,
-                    callbackId: command.callbackId
-                    )
-                    */
-                    
-                    print("Error attempting export clip")
-                    // would be ideal to show an alert letting user know about the failure
-                }
-                //self?.saveToPhotos(tempURL: clipURL)
-                //self?.videoRecorded = NSData(contentsOf: clipURL)
+            self.videoWriter = nil;
+            return;
+        }
+
+
+        // Start da captura de tela 
+
+        if #available(iOS 11.0, *) {
+
+
+            if(recordAudio){
+                RPScreenRecorder.shared().isMicrophoneEnabled=true;
+            }else{
+                RPScreenRecorder.shared().isMicrophoneEnabled=false;
+
             }
+            
+            RPScreenRecorder.shared().startCapture(
+            handler: { (cmSampleBuffer, rpSampleType, error) in
+                guard error == nil else {
+                    print("Error starting capture");                    
+                    
+                    let pluginResult = CDVPluginResult(status:CDVCommandStatus_ERROR, messageAs: false)
+                    self.commandDelegate!.send(pluginResult, callbackId:command.callbackId)
+                    return;
+                }
+
+            
+                switch rpSampleType {
+                case RPSampleBufferType.video:
+                    print("writing sample....");
+                    if self.videoWriter?.status == AVAssetWriter.Status.unknown {
+
+                        if (( self.videoWriter?.startWriting ) != nil) {
+                            print("Starting writing unknown");
+                            
+                            let pluginResult = CDVPluginResult(status:CDVCommandStatus_OK, messageAs: true)
+                            self.commandDelegate!.send(pluginResult, callbackId:command.callbackId)
+                            
+                            self.videoWriter?.startWriting()
+                            self.videoWriter?.startSession(atSourceTime:  CMSampleBufferGetPresentationTimeStamp(cmSampleBuffer))
+                        }
+                    }
+
+                    if self.videoWriter?.status == AVAssetWriter.Status.writing {
+                        if (self.videoWriterInput?.isReadyForMoreMediaData == true) {
+                            print("Writting a sample Video");
+
+                            if  self.videoWriterInput?.append(cmSampleBuffer) == false {
+                                print(" we have a problem writing video")                                
+
+                                let pluginResult = CDVPluginResult(status:CDVCommandStatus_OK, messageAs: false)
+                                self.commandDelegate!.send(pluginResult, callbackId:command.callbackId)
+                            }
+                        }
+                    }
+                case RPSampleBufferType.audioApp:
+                    
+                    print("audioApp ....");
+
+                case RPSampleBufferType.audioMic:
+                    
+                    print("audioMic ....");
+
+                default:
+                   print("not a video sample, so ignore");
+                }
+                
+                
+                
+            } ){(error) in
+                        guard error == nil else {
+                           //Handle error
+                           print("Screen record not allowed");                           
+                           let pluginResult = CDVPluginResult(status:CDVCommandStatus_OK, messageAs: false)
+                           self.commandDelegate!.send(pluginResult, callbackId:command.callbackId)
+                           return;
+                       }
+                   }
+        } else {
+            //Fallback on earlier versions
+        }        
+
+    }
+
+
+    @objc func stopCapture(command: CDVInvokedUrlCommand) {
+        
+        //Para de gravar a screen
+        if #available(iOS 11.0, *) {
+            RPScreenRecorder.shared().stopCapture( handler: { (error) in
+                guard error == nil else {
+                    print("Error stop capture");                    
+                    
+                    let pluginResult = CDVPluginResult(status:CDVCommandStatus_ERROR, messageAs: "Error stop capture")
+                    self.commandDelegate!.send(pluginResult, callbackId:command.callbackId)
+                    return;
+                }
+                print("stopping recording");
+            })
+        } else {
+                //  Fallback on earlier versions
         }
-        /*
-        var pluginResult = CDVPluginResult(
-            status: CDVCommandStatus_OK,
-            messageAsArrayBuffer: videoRecorded!
-        )
-        */
-        //return videoRecorded!
+
+        self.videoWriterInput?.markAsFinished();
+        self.videoWriter?.finishWriting {
+            print("finished writing video");
+            
+            self.videoRecorded = NSData(contentsOf: self.videoOutputURL!)
+
+            let pluginResult = CDVPluginResult(status:CDVCommandStatus_OK, messageAs: self.videoRecorded)
+            self.commandDelegate!.send(pluginResult, callbackId:command.callbackId)            
+     
+        }
     }
     
-    private func isRecording() -> Bool {
-        return recorder.isRecording
-    }
-    
-    private func getDirectory() -> URL {
-        var tempPath = URL(fileURLWithPath: NSTemporaryDirectory())
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd-hh-mm-ss"
-        let stringDate = formatter.string(from: Date())
-        fileName = String.localizedStringWithFormat("output-%@", stringDate)
-        tempPath.appendPathComponent(String.localizedStringWithFormat("output-%@.mp4", stringDate))
-        return tempPath 
-    }
- 
     
 }
