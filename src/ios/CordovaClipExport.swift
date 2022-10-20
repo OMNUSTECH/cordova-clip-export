@@ -202,10 +202,17 @@ class CordovaClipExport : CDVPlugin
         self.videoWriter?.finishWriting {
             print("finished writing video");
             
-            var videoRecorded = Data.init(contentsOfFile: self.videoOutputURL!.path)
-    
-            let pluginResult = CDVPluginResult(status:CDVCommandStatus_OK, messageAsArrayBuffer:  videoRecorded)
-            self.commandDelegate!.send(pluginResult, callbackId:command.callbackId)    
+            do {
+                let videoRecorded = try Data.init(contentsOf: self.videoOutputURL!)
+
+                let pluginResult = CDVPluginResult(status:CDVCommandStatus_OK, messageAsArrayBuffer:  videoRecorded)
+                self.commandDelegate!.send(pluginResult, callbackId:command.callbackId)
+
+            }catch {
+                let pluginResult = CDVPluginResult(status:CDVCommandStatus_ERROR, messageAs:  "Error to return the binary")
+                self.commandDelegate!.send(pluginResult, callbackId:command.callbackId)
+
+            }  
         }
     }
 

@@ -16,7 +16,7 @@
             <param name="ios-package" value="CordovaClipExport" />
         </feature>
         </config-file>
-        <config-file target="*-Info.plist" parent="CFBundleURLTypes">
+        <config-file target="*-Info.plist" parent="/*">
         <array>
             <dict>
                 <key>NSPhotoLibraryAddUsageDescription</key>
