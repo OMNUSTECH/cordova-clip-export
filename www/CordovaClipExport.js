@@ -2,21 +2,25 @@ var exec = require('cordova/exec');
 
 
 var ClipExport = {
-    isAvailable: function (success, error) {
-        exec(success, error, 'CordovaClipExport', 'isAvailable');
+    isAvailable: function (onSuccess, error) {
+        exec(onSuccess, error, 'CordovaClipExport', 'isAvailable');
     },
-    isRecording: function (success, error) {
-        exec(success, error, "CordovaClipExport", "isRecording");
+    isRecording: function (onSuccess, error) {
+        exec(onSuccess, error, "CordovaClipExport", "isRecording");
     },
     coolMethod: function (arg0, onSuccess, onError) {
         exec(onSuccess, onError, "CordovaClipExport", "coolMethod", [arg0]);
     },
-    startCapture: function (isMicrophone, success, error) {
-        exec(success, error, "CordovaClipExport", "startCapture",[isMicrophone]);
+    startCapture: function (isMicrophone, onSuccess, error) {
+        exec(onSuccess, error, "CordovaClipExport", "startCapture",[isMicrophone]);
     },
-    stopCapture: function (success, error) {
-        exec(success, error, "CordovaClipExport", "stopCapture");
+    stopCapture: function (onSuccess, error) {
+        exec(onSuccess, error, "CordovaClipExport", "stopCapture");
+    },
+    stopCaptureOnGallery: function (onSuccess, error) {
+        exec(onSuccess, error, "CordovaClipExport", "stopCaptureOnGallery");
     }
+
 };
 
 module.exports = ClipExport;

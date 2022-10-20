@@ -8,12 +8,12 @@
 import UIKit
 import ReplayKit
 import AVFoundation
+import Photos
 
 class CordovaClipExport : CDVPlugin
 {
     let recorder = RPScreenRecorder.shared()
     
-    var videoRecorded: NSData? = nil
     var videoOutputURL : URL?
     var videoWriter : AVAssetWriter?
 
@@ -56,16 +56,16 @@ class CordovaClipExport : CDVPlugin
            }
     }
 
-
-    @objc func isRecording(_ command: CDVInvokedUrlCommand) {
+    @objc(isRecording:)
+    func isRecording(_ command: CDVInvokedUrlCommand) {
         let recorder = RPScreenRecorder.shared()
         let recording = recorder.isRecording;
         let pluginResult = CDVPluginResult(status:CDVCommandStatus_OK, messageAs: recording)
         self.commandDelegate!.send(pluginResult, callbackId:command.callbackId)
     }
 
-
-    @objc func startCapture(_ command: CDVInvokedUrlCommand) {
+    @objc(startCapture:)
+    func startCapture(_ command: CDVInvokedUrlCommand) {
 
         // Parâmetros de entrada
         
@@ -77,8 +77,6 @@ class CordovaClipExport : CDVPlugin
         
         let documentsPath = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0] as NSString
         self.videoOutputURL = URL(fileURLWithPath: documentsPath.appendingPathComponent(self.nameVideo))
-
-        self.isRecording = true        
         
         // Excluir o registro se já existe
         do {
@@ -181,8 +179,8 @@ class CordovaClipExport : CDVPlugin
 
     }
 
-
-    @objc func stopCapture(command: CDVInvokedUrlCommand) {
+    @objc(stopCapture:)
+    func stopCapture(command: CDVInvokedUrlCommand) {
         
         //Para de gravar a screen
         if #available(iOS 11.0, *) {
@@ -204,13 +202,77 @@ class CordovaClipExport : CDVPlugin
         self.videoWriter?.finishWriting {
             print("finished writing video");
             
-            self.videoRecorded = NSData(contentsOf: self.videoOutputURL!)
-
-            let pluginResult = CDVPluginResult(status:CDVCommandStatus_OK, messageAs: self.videoRecorded)
-            self.commandDelegate!.send(pluginResult, callbackId:command.callbackId)            
-     
+            var videoRecorded = Data.init(contentsOfFile: self.videoOutputURL!.path)
+    
+            let pluginResult = CDVPluginResult(status:CDVCommandStatus_OK, messageAsArrayBuffer:  videoRecorded)
+            self.commandDelegate!.send(pluginResult, callbackId:command.callbackId)    
         }
     }
+
+
+    @objc(stopCaptureOnGallery:)
+    func stopCaptureOnGallery(command: CDVInvokedUrlCommand) {
+        
+        //Para de gravar a screen
+        if #available(iOS 11.0, *) {
+            RPScreenRecorder.shared().stopCapture( handler: { (error) in
+                guard error == nil else {
+                    print("Error stop capture");                    
+                    
+                    let pluginResult = CDVPluginResult(status:CDVCommandStatus_ERROR, messageAs: "Error stop capture")
+                    self.commandDelegate!.send(pluginResult, callbackId:command.callbackId)
+                    return;
+                }
+                print("stopping recording");
+            })
+        } else {
+                //  Fallback on earlier versions
+        }
+
+        self.videoWriterInput?.markAsFinished();
+        self.videoWriter?.finishWriting {
+            print("finished writing video");
+
+
+            PHPhotoLibrary.shared().performChanges {
+                PHAssetChangeRequest.creationRequestForAssetFromVideo(atFileURL: self.videoOutputURL!)
+            } completionHandler: { success, error in
+                if success == true {
+                    self.showAlertMessage(message: "Your video was successfully saved", viewController: self.viewController)
+                    print("Saved rolling clip to photos")
+
+                    let pluginResult = CDVPluginResult(status:CDVCommandStatus_OK, messageAs:  true)
+                    self.commandDelegate!.send(pluginResult, callbackId:command.callbackId)    
+
+
+                } else {
+                    print("Error exporting clip to Photos \(String(describing: error))")
+            
+                    let pluginResult = CDVPluginResult(status:CDVCommandStatus_OK, messageAs:  false)
+                    self.commandDelegate!.send(pluginResult, callbackId:command.callbackId)    
+
+                }
+            }            
+    
+        }
+    }    
+
+
+    func showAlertMessage(message:String, viewController: UIViewController) {
+        DispatchQueue.main.async {
+            let alertMessage = UIAlertController(title: "", message: message, preferredStyle: .alert)
+            let cancelAction = UIAlertAction(title: "Ok", style: .cancel)
+
+            alertMessage.addAction(cancelAction)
+
+            viewController.present(alertMessage, animated: true, completion: nil)
+        }
+    }
+    
+
+    func loadFileFromLocalPath(_ localFilePath: String) ->Data? {
+       return try? Data(contentsOf: URL(fileURLWithPath: localFilePath))
+    }    
     
     
 }
