@@ -8,9 +8,6 @@ var ClipExport = {
     isRecording: function (onSuccess, error) {
         exec(onSuccess, error, "CordovaClipExport", "isRecording");
     },
-    coolMethod: function (arg0, onSuccess, onError) {
-        exec(onSuccess, onError, "CordovaClipExport", "coolMethod", [arg0]);
-    },
     startCapture: function (isMicrophone, onSuccess, error) {
         exec(onSuccess, error, "CordovaClipExport", "startCapture",[isMicrophone]);
     },

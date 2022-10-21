@@ -19,29 +19,8 @@ class CordovaClipExport : CDVPlugin
 
     var audioInput:AVAssetWriterInput!
     var videoWriterInput : AVAssetWriterInput?
-    let nameVideo: String = "clip-record.mp4"
     var recordAudio: Bool = false;
-    let screenSize = UIScreen.main.bounds
 
-
-
-    @objc(coolMethod:)
-    func coolMethod(_ command: CDVInvokedUrlCommand) {
-        
-        let msg = command.arguments[0] as? String ?? "Error"
-        print(msg)
-        
-        var pluginResult = CDVPluginResult(status: CDVCommandStatus_ERROR,messageAs: msg)
-        
-        if msg.count > 0 {
-            pluginResult = CDVPluginResult(
-                status: CDVCommandStatus_OK,
-                messageAs: msg
-            )
-        }
-        
-        self.commandDelegate!.send(pluginResult,callbackId: command.callbackId) 
-    }
     
     @objc(isAvailable:)
        func isAvailable(command: CDVInvokedUrlCommand) {
@@ -73,10 +52,13 @@ class CordovaClipExport : CDVPlugin
 
         self.recordAudio = isMicOn
 
-        // Monta o caminho que onde será salvo a video da screen        
+        // Monta o caminho que onde será salvo a video da screen
         
-        let documentsPath = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0] as NSString
-        self.videoOutputURL = URL(fileURLWithPath: documentsPath.appendingPathComponent(self.nameVideo))
+        let nameVideo = "recordClip"
+        
+        let documentsPath = NSString(format: "%@%@.mp4",NSTemporaryDirectory(), nameVideo) //let documentsPath = NSSearchPathForDirectoriesInDomains(., .userDomainMask, true)[0] as NSString
+        
+        self.videoOutputURL = URL(fileURLWithPath: documentsPath as String)
         
         // Excluir o registro se já existe
         do {
@@ -97,6 +79,41 @@ class CordovaClipExport : CDVPlugin
             self.videoWriter = nil;
             return;
         }
+
+
+        //Cria as configuraçõesde video
+        
+        if #available(iOS 11.0, *) {
+            
+            let codec = AVVideoCodecType.h264;
+            
+            let screenSize = self.webView.bounds  //UIScreen.main.bounds
+            
+            let videoSettings: [String : Any] = [
+                AVVideoCodecKey  : codec,
+                AVVideoWidthKey  : screenSize.width,
+                AVVideoHeightKey : screenSize.height
+            ]
+                        
+            if(recordAudio){
+                
+                let audioOutputSettings: [String : Any] = [
+                    AVNumberOfChannelsKey : 2,
+                    AVFormatIDKey : kAudioFormatMPEG4AAC,
+                    AVSampleRateKey: 44100,
+                ]
+                
+                audioInput = AVAssetWriterInput(mediaType: AVMediaType.audio, outputSettings: audioOutputSettings)
+                videoWriter?.add(audioInput)
+            
+            }
+
+          //Create the asset writer input object whihc is actually used to write out the video
+         videoWriterInput = AVAssetWriterInput(mediaType: AVMediaType.video, outputSettings: videoSettings);
+         videoWriterInput?.expectsMediaDataInRealTime = true
+         videoWriter?.add(videoWriterInput!);
+            
+        }        
 
 
         // Start da captura de tela 
@@ -240,7 +257,7 @@ class CordovaClipExport : CDVPlugin
         self.videoWriter?.finishWriting {
             print("finished writing video");
 
-
+            print(self.videoOutputURL!)
             PHPhotoLibrary.shared().performChanges {
                 PHAssetChangeRequest.creationRequestForAssetFromVideo(atFileURL: self.videoOutputURL!)
             } completionHandler: { success, error in
