@@ -1,32 +1,47 @@
 <?xml version='1.0' encoding='utf-8'?>
-<plugin id="cordova-clip-export" version="0.0.1" xmlns="http://apache.org/cordova/ns/plugins/1.0" >
-    <name>CordovaClipExport</name>
-        <description>This cordova plugin allows to use the ReplayKit framework in iOS </description>
-        <keywords>cordova,replaykit,screen recording</keywords>
-        <license>MIT</license>
-        <repo>https://github.com/OMNUSTECH/cordova-clip-export.git</repo>
-        
-    <js-module name="CordovaClipExport" src="www/CordovaClipExport.js">
-        <clobbers target="cordova.plugins.ClipExport" />
-    </js-module>
-
-    <platform name="ios">
-        <config-file target="config.xml" parent="/*">
-        <feature name="CordovaClipExport">
-            <param name="ios-package" value="CordovaClipExport" />
-        </feature>
+<plugin id="cordova-clip-export" version="0.0.1"
+	xmlns="http://apache.org/cordova/ns/plugins/1.0">
+	<name>CordovaClipExport</name>
+	<description>This cordova plugin allows to use the ReplayKit framework in iOS </description>
+	<keywords>cordova,replaykit,screen recording</keywords>
+	<license>MIT</license>
+	<repo>https://github.com/OMNUSTECH/cordova-clip-export.git</repo>
+	<js-module name="CordovaClipExport" src="www/CordovaClipExport.js">
+		<clobbers target="cordova.plugins.ClipExport" />
+	</js-module>
+	<platform name="ios">
+		<config-file parent="/*" target="config.xml">
+			<feature name="CordovaClipExport">
+				<param name="ios-package" value="CordovaClipExport" />
+			</feature>
+		</config-file>
+		<config-file parent="NSPhotoLibraryAddUsageDescription" target="*-Info.plist">
+			<key>NSPhotoLibraryAddUsageDescription</key>
+			<string>Clip from a Screen was Record With Success</string>
+		</config-file>
+		<source-file src="src/ios/CordovaClipExport.swift" />
+		<dependency id="cordova-plugin-add-swift-support" version="2.0.2" />
+		<framework src="ReplayKit.framework" />
+		<framework src="UIKit.framework" />
+		<framework src="AVFoundation.framework" />
+		<framework src="Photos.framework" />
+	</platform>
+	<platform name="android">
+		<config-file parent="/*" target="res/xml/config.xml">
+            <preference name="GradlePluginKotlinEnabled" value="true" />
+			<feature name="CordovaClipExport">
+				<param name="android-package" value="cordova.clip.export.CordovaClipExport" />
+			</feature>
+		</config-file>
+        <config-file target="AndroidManifest.xml" parent="/manifest/application">
+          <service android:name="cordova.clip.export.ScreenRecordService" android:stopWithTask="true" android:foregroundServiceType="mediaProjection"/>
         </config-file>
-        <config-file target="*-Info.plist" parent="NSPhotoLibraryAddUsageDescription" >
-            <key>NSPhotoLibraryAddUsageDescription</key>
-            <string>Clip from a Screen was Record With Success</string>
-        </config-file>        
-        <source-file src="src/ios/CordovaClipExport.swift" />
-        <dependency id="cordova-plugin-add-swift-support" version="2.0.2" />
-        <framework src="ReplayKit.framework" />
-        <framework src="UIKit.framework" />
-        <framework src="AVFoundation.framework" />
-        <framework src="Photos.framework" />
-    </platform>    
+        <config-file parent="/*" target="AndroidManifest.xml">
+          <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+          <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+          <uses-permission android:name="android.permission.RECORD_AUDIO" />
+        </config-file>
+		<source-file src="src/android/CordovaClipExport.kt" target-dir="src/main/kotlin/cordova/clip/export" />
+		<source-file src="src/android/ScreenRecordService.kt" target-dir="src/main/kotlin/cordova/clip/export" />
+	</platform>
 </plugin>
-
-

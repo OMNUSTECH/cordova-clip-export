@@ -2,6 +2,9 @@ var exec = require('cordova/exec');
 
 
 var ClipExport = {
+    coolMethod: function(arg0, success, error) {
+        exec(success,error, 'CordovaClipExport', 'coolMethod',[arg0])
+    },
     isAvailable: function (onSuccess, error) {
         exec(onSuccess, error, 'CordovaClipExport', 'isAvailable');
     },

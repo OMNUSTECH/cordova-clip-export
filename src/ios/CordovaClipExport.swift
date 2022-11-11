@@ -21,6 +21,18 @@ class CordovaClipExport : CDVPlugin
     var videoWriterInput : AVAssetWriterInput?
     var recordAudio: Bool = false;
 
+
+    @objc(coolMethod:)
+    func coolMethod(_ command: CDVInvokedUrlCommand) {
+        let msg = command.arguments[0] as? String ?? "Error"
+        print(msg)
+        var pluginResult = CDVPluginResult(status: CDVCommandStatus_ERROR,messageAs: msg)
+        if msg.count > 0 {
+            pluginResult = CDVPluginResult(status: CDVCommandStatus_OK,messageAs: msg)
+        }
+        self.commandDelegate!.send(pluginResult,callbackId: command.callbackId)
+    }
+
     
     @objc(isAvailable:)
        func isAvailable(command: CDVInvokedUrlCommand) {
