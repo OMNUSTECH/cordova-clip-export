@@ -80,7 +80,7 @@ open class CordovaClipExport : CordovaPlugin(), ServiceConnection  {
 
         if(action == "stopCaptureOnGallery") {
             saveOnGallery = true
-            this.stopRecord();s
+            this.stopRecord();
             return true
         }
 
