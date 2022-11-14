@@ -74,6 +74,7 @@ open class CordovaClipExport : CordovaPlugin(), ServiceConnection  {
         }
 
         if(action == "stopCapture") {
+            saveOnGallery = false
             this.stopRecord();
             return true
         }
@@ -90,7 +91,12 @@ open class CordovaClipExport : CordovaPlugin(), ServiceConnection  {
         }
 
         if(action == "isRecording") {
-            callbackContext.success("$serviceStarted")
+            if(serviceStarted) {
+                callbackContext.success("Recording")
+            }else {
+                callbackContext.success("not Recording")
+            }
+            
             return true
         }
 
